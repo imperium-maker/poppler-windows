@@ -1,0 +1,665 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Officiant Master Console</title>
+    <style>
+        :root {
+            --primary: #1a73e8;
+            --primary-dark: #1558b0;
+            --emergency: #d93025;
+            --legal: #f9ab00;
+            --accent: #1e8e3e;
+            --accent-dark: #176c30;
+            --bg: #ffffff;
+            --surface: #f8f9fa;
+            --text: #202124;
+            --muted: #5f6368;
+            --border: #dadce0;
+            --base-fs: 18px;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            font-family: "Segoe UI", Roboto, Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background: var(--bg);
+            color: var(--text);
+            font-size: var(--base-fs);
+            line-height: 1.45;
+        }
+
+        button, input, textarea { font: inherit; }
+
+        a { color: inherit; }
+
+        .top-bar,
+        .bottom-bar {
+            position: fixed;
+            left: 0;
+            width: 100%;
+            background: var(--surface);
+            border-color: var(--border);
+            display: flex;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .top-bar {
+            top: 0;
+            min-height: 76px;
+            border-bottom: 1px solid var(--border);
+            justify-content: space-between;
+            padding: 10px 20px;
+            gap: 12px;
+        }
+
+        .bottom-bar {
+            bottom: 0;
+            min-height: 60px;
+            border-top: 1px solid var(--border);
+            justify-content: center;
+            padding: 8px 16px;
+            color: var(--muted);
+            font-size: 0.85rem;
+            text-align: center;
+        }
+
+        .brand {
+            color: var(--primary);
+            font-weight: 800;
+            letter-spacing: 0.02em;
+        }
+
+        .toolbar {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+        }
+
+        .main-container {
+            padding: 96px 20px 110px;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .emergency-banner {
+            background: #fff5f5;
+            border: 2px solid var(--emergency);
+            border-radius: 14px;
+            padding: 16px;
+            margin-bottom: 24px;
+            box-shadow: 0 2px 8px rgba(217, 48, 37, 0.08);
+        }
+
+        .status-grid,
+        .action-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 10px;
+        }
+
+        .status-card {
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 12px;
+            background: #fff;
+        }
+
+        .legal-callout {
+            border-left: 5px solid var(--legal);
+            background: #fffcf0;
+            padding: 12px;
+            margin: 12px 0;
+            border-radius: 8px;
+        }
+
+        .hud-btn,
+        .btn-main,
+        .chip {
+            border-radius: 10px;
+            border: 1px solid var(--border);
+            cursor: pointer;
+            font-weight: 700;
+        }
+
+        .hud-btn {
+            min-width: 52px;
+            min-height: 48px;
+            background: #fff;
+            color: var(--text);
+        }
+
+        .btn-main {
+            background: var(--primary);
+            color: #fff;
+            border: none;
+            padding: 15px;
+            width: 100%;
+            margin: 8px 0;
+        }
+
+        .btn-main:hover,
+        .btn-main:focus-visible { background: var(--primary-dark); }
+
+        .btn-green { background: var(--accent); }
+        .btn-green:hover,
+        .btn-green:focus-visible { background: var(--accent-dark); }
+        .btn-warn { background: var(--emergency); }
+        .btn-secondary { background: #5f6368; }
+        .btn-quiet { background: #fff; color: var(--text); border: 1px solid var(--border); }
+
+        .chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 9px 12px;
+            background: #fff;
+            color: var(--text);
+        }
+
+        details {
+            border: 1px solid #e8eaed;
+            border-radius: 12px;
+            margin-bottom: 12px;
+            background: #fff;
+            overflow: hidden;
+        }
+
+        summary {
+            padding: 16px;
+            font-weight: 800;
+            cursor: pointer;
+            list-style: none;
+            display: flex;
+            justify-content: space-between;
+            gap: 12px;
+        }
+
+        summary::after {
+            content: "▼";
+            font-size: 0.8em;
+            color: #9aa0a6;
+        }
+
+        details[open] summary::after { content: "▲"; }
+
+        .content {
+            padding: 16px;
+            border-top: 1px solid #e8eaed;
+        }
+
+        label {
+            display: block;
+            font-weight: 700;
+            margin-top: 10px;
+        }
+
+        input,
+        textarea {
+            width: 100%;
+            padding: 12px;
+            margin-top: 6px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background: #fff;
+            color: var(--text);
+        }
+
+        textarea { min-height: 110px; resize: vertical; }
+
+        .helper { font-size: 0.85rem; color: var(--muted); margin: 6px 0 10px; }
+
+        #toast {
+            position: fixed;
+            left: 50%;
+            bottom: 78px;
+            transform: translateX(-50%);
+            background: #202124;
+            color: #fff;
+            padding: 12px 16px;
+            border-radius: 999px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+            z-index: 3000;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s ease;
+        }
+
+        #toast.show { opacity: 1; }
+
+        #performance-view {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: #121212;
+            color: #fff;
+            z-index: 2000;
+            padding: 24px;
+            text-align: center;
+            overflow-y: auto;
+        }
+
+        .live-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+        }
+
+        #live-timer {
+            color: #fcc934;
+            font-family: Consolas, "Courier New", monospace;
+            font-size: 1.5rem;
+            font-weight: 800;
+        }
+
+        .progress-container {
+            width: 100%;
+            height: 8px;
+            background: #333;
+            margin: 18px 0;
+            border-radius: 999px;
+            overflow: hidden;
+        }
+
+        #progress-bar {
+            width: 0%;
+            height: 100%;
+            background: var(--accent);
+            transition: width 0.25s ease;
+        }
+
+        #slide-title {
+            color: #8ab4f8;
+            margin: 12px 0;
+        }
+
+        .slide-text {
+            font-size: clamp(1.7rem, 5vw, 3.2rem);
+            line-height: 1.25;
+            margin: 24px auto;
+            max-width: 980px;
+        }
+
+        .quote-card,
+        .live-notes,
+        #legal-box {
+            max-width: 920px;
+            margin: 18px auto;
+            border-radius: 12px;
+            padding: 18px;
+        }
+
+        #legal-box {
+            background: var(--emergency);
+            display: none;
+            font-weight: 800;
+        }
+
+        .quote-card {
+            background: #2c2c2c;
+            border: 1px solid #444;
+            color: #81c995;
+            display: none;
+            font-style: italic;
+        }
+
+        .live-notes {
+            display: none;
+            background: #1f2937;
+            border: 1px solid #374151;
+            text-align: left;
+            white-space: pre-wrap;
+        }
+
+        .live-controls {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 10px;
+            max-width: 920px;
+            margin: 24px auto 0;
+        }
+
+        .print-only { display: none; }
+
+        @media (max-width: 680px) {
+            .top-bar { align-items: flex-start; flex-direction: column; }
+            .main-container { padding-top: 142px; }
+            .status-grid,
+            .action-grid,
+            .live-controls { grid-template-columns: 1fr; }
+            .toolbar { justify-content: flex-start; }
+        }
+
+        @media print {
+            .no-print,
+            #performance-view,
+            #toast { display: none !important; }
+            .print-only { display: block !important; }
+            body { font-size: 12pt; }
+            .print-page { padding: 0.5in; }
+        }
+    </style>
+</head>
+<body>
+    <div class="top-bar no-print">
+        <div>
+            <div class="brand">OFFICIANT MASTER CONSOLE</div>
+            <div class="helper" id="save-status">No API key needed • saves on this device</div>
+        </div>
+        <div class="toolbar" aria-label="Console controls">
+            <button class="hud-btn" type="button" onclick="resizeUI(-2)" aria-label="Decrease font size">A-</button>
+            <button class="hud-btn" type="button" onclick="resizeUI(2)" aria-label="Increase font size">A+</button>
+            <button class="hud-btn" type="button" onclick="toggleDarkMode()" aria-label="Toggle dark mode">◐</button>
+        </div>
+    </div>
+
+    <main class="main-container no-print">
+        <section class="emergency-banner" aria-labelledby="critical-title">
+            <h2 id="critical-title" style="margin:0; color: var(--emergency);">⚠️ Day-Of Critical Checklist</h2>
+            <div class="status-grid" style="margin-top: 12px;">
+                <label class="status-card"><input type="checkbox" data-check="license"> License physically seen before ceremony</label>
+                <label class="status-card"><input type="checkbox" data-check="black-pen"> Black-ink pen ready</label>
+                <label class="status-card"><input type="checkbox" data-check="witness"> Witness confirmed, age 18+</label>
+                <label class="status-card"><input type="checkbox" data-check="rings"> Rings ready or ring plan confirmed</label>
+            </div>
+            <p class="helper">Tip: use <strong>Emergency Quote</strong> in Live Mode if you freeze.</p>
+        </section>
+
+        <details open>
+            <summary>📝 Morning Briefing & Setup</summary>
+            <div class="content">
+                <label for="couple-names">Couple names</label>
+                <input id="couple-names" type="text" placeholder="J.C. & Jacquelyn">
+
+                <label for="ceremony-location">Ceremony location</label>
+                <input id="ceremony-location" type="text" placeholder="Paso Robles, CA">
+
+                <label for="morning-notes">Love story details / quirks</label>
+                <textarea id="morning-notes" placeholder="Paste notes from your morning meeting here..."></textarea>
+                <p class="helper">Everything auto-saves locally in the browser. No server and no API key required.</p>
+                <div class="action-grid">
+                    <button class="btn-main btn-green" type="button" onclick="saveAll(true)">💾 Save Now</button>
+                    <button class="btn-main btn-quiet" type="button" onclick="clearSavedData()">🧹 Clear Saved Data</button>
+                </div>
+            </div>
+        </details>
+
+        <details>
+            <summary>🔗 Credentials & SLO Courthouse</summary>
+            <div class="content">
+                <a href="https://www.themonastery.org/credentials/ordination-certificate-S2FybCBNYXNzZXleOS8xMC8yMDI1XmxhcmdlXmZyZWVe.jpg" target="_blank" rel="noopener" class="btn-main" style="display:block; text-decoration:none; text-align:center;">View Karl's Credentials</a>
+                <div class="legal-callout">
+                    <strong>SLO County Clerk-Recorder</strong><br>
+                    1055 Monterey St, Suite D120, San Luis Obispo, CA 93408<br>
+                    <strong>Rule:</strong> Return the signed marriage license within 10 days of the ceremony.
+                </div>
+            </div>
+        </details>
+
+        <details>
+            <summary>💡 Officiant Pro-Tips</summary>
+            <div class="content">
+                <p>• <strong>Microphone:</strong> Keep it about 2 inches from your chin and do not let it drop.</p>
+                <p>• <strong>The Photo:</strong> When you say “You may kiss,” step 2 feet to your left immediately.</p>
+                <p>• <strong>Nerves:</strong> If the couple cries, stop speaking and let the moment breathe.</p>
+                <p>• <strong>Keyboard:</strong> In Live Mode use ← / → for slides, Q for quote, N for notes, Esc to exit.</p>
+            </div>
+        </details>
+
+        <details>
+            <summary>📋 Ceremony Flow</summary>
+            <div class="content" id="ceremony-list"></div>
+        </details>
+
+        <button class="btn-main btn-green" type="button" onclick="launchLive()">🎬 Launch Live Performance Mode</button>
+        <button class="btn-main btn-secondary" type="button" onclick="preparePrint(); window.print();">🖨️ Print Backup Outline</button>
+    </main>
+
+    <section id="performance-view" aria-live="polite">
+        <div class="live-top">
+            <div id="live-timer">00:00</div>
+            <button class="chip" type="button" onclick="toggleLiveNotes()">Notes</button>
+            <button class="chip" type="button" onclick="closeLive()" aria-label="Close live mode">✕ Close</button>
+        </div>
+
+        <div class="progress-container" aria-label="Ceremony progress"><div id="progress-bar"></div></div>
+        <div id="slide-count" class="helper" style="color:#bdc1c6;">Slide 1 of 5</div>
+        <h1 id="slide-title">Start</h1>
+        <div id="slide-text" class="slide-text">Ready to begin?</div>
+
+        <div id="legal-box"><strong>MANDATORY:</strong> <span id="legal-txt"></span></div>
+        <div id="live-notes" class="live-notes"></div>
+        <div id="q-card" class="quote-card"></div>
+
+        <div class="live-controls">
+            <button class="btn-main btn-secondary" type="button" onclick="moveSlide(-1)">← Back</button>
+            <button class="btn-main btn-green" type="button" onclick="moveSlide(1)">Next →</button>
+            <button class="btn-main btn-warn" type="button" onclick="getEmergencyQuote()">🆘 Emergency Quote</button>
+            <button class="btn-main" type="button" onclick="jumpToPronouncement()">Jump to Pronouncement</button>
+        </div>
+    </section>
+
+    <section class="print-only print-page">
+        <h1 style="text-align:center;">Ceremony Guide</h1>
+        <p><strong>Couple:</strong> <span id="print-couple"></span></p>
+        <p><strong>Officiant:</strong> Karl Massey | <strong>Location:</strong> <span id="print-location"></span></p>
+        <h2>Morning Notes</h2>
+        <p id="print-notes"></p>
+        <h2>Ceremony Flow</h2>
+        <div id="print-content"></div>
+    </section>
+
+    <div id="toast" role="status"></div>
+
+    <footer class="bottom-bar no-print">
+        <span>Karl Massey • Paso Robles Wedding 2026 • Standalone HTML, no API key required</span>
+    </footer>
+
+<script>
+    const storageKey = "officiantMasterConsole.v1";
+    let fs = 18;
+    let step = 0;
+    let secondsElapsed = 0;
+    let timer;
+    let toastTimer;
+
+    const ceremony = [
+        { t: "Welcome", s: "Gather everyone’s attention. Welcome guests to the ceremony and ask them to be seated.", l: "Confirm the license is physically present before you begin." },
+        { t: "The Story", s: "Share the couple’s story. Use one specific detail, one laugh, and one sincere reason they fit together.", l: "" },
+        { t: "Legal Intent", s: "Face the couple. Ask the required consent question and wait for each answer.", l: "Ask each partner if they take the other in marriage and confirm both clearly say “I do.”" },
+        { t: "Vows & Rings", s: "Guide vows and ring exchange. Slow down, breathe, and prompt one line at a time if needed.", l: "" },
+        { t: "Pronouncement", s: "Make the introduction. After saying they may kiss, immediately step to the side for the photo.", l: "Say: “By the power vested in me by the State of California, I now pronounce you married!”" },
+        { t: "License Aftercare", s: "After the ceremony, get signatures, verify every required field, and protect the document.", l: "Return the signed license to the County Clerk-Recorder within 10 days of the ceremony." }
+    ];
+
+    const quotes = [
+        "Love is patient, love is kind. It does not envy, it does not boast.",
+        "A successful marriage requires falling in love many times, always with the same person.",
+        "Love does not consist of gazing at each other, but in looking outward together in the same direction.",
+        "In the arithmetic of love, one plus one equals everything, and two minus one equals nothing.",
+        "Today is not the finish line; it is the first page of the promises you keep together."
+    ];
+
+    const fields = ["couple-names", "ceremony-location", "morning-notes"];
+
+    window.addEventListener("DOMContentLoaded", () => {
+        renderCeremonyList();
+        loadSavedData();
+        preparePrint();
+        fields.forEach(id => document.getElementById(id).addEventListener("input", () => saveAll(false)));
+        document.querySelectorAll("[data-check]").forEach(box => box.addEventListener("change", () => saveAll(false)));
+    });
+
+    document.addEventListener("keydown", event => {
+        if (document.getElementById("performance-view").style.display !== "block") return;
+        if (event.key === "ArrowRight") moveSlide(1);
+        if (event.key === "ArrowLeft") moveSlide(-1);
+        if (event.key.toLowerCase() === "q") getEmergencyQuote();
+        if (event.key.toLowerCase() === "n") toggleLiveNotes();
+        if (event.key === "Escape") closeLive();
+    });
+
+    function getState() {
+        const checks = {};
+        document.querySelectorAll("[data-check]").forEach(box => checks[box.dataset.check] = box.checked);
+        return {
+            fs,
+            dark: document.body.classList.contains("dark"),
+            fields: Object.fromEntries(fields.map(id => [id, document.getElementById(id).value])),
+            checks
+        };
+    }
+
+    function saveAll(showMessage) {
+        localStorage.setItem(storageKey, JSON.stringify(getState()));
+        document.getElementById("save-status").textContent = `Saved locally • ${new Date().toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}`;
+        preparePrint();
+        if (showMessage) showToast("Saved to this device.");
+    }
+
+    function loadSavedData() {
+        const saved = localStorage.getItem(storageKey);
+        if (!saved) return;
+        try {
+            const data = JSON.parse(saved);
+            fs = Number(data.fs) || fs;
+            document.documentElement.style.setProperty("--base-fs", `${fs}px`);
+            fields.forEach(id => document.getElementById(id).value = data.fields?.[id] || "");
+            document.querySelectorAll("[data-check]").forEach(box => box.checked = Boolean(data.checks?.[box.dataset.check]));
+            if (data.dark) toggleDarkMode(false);
+        } catch {
+            showToast("Saved data could not be loaded.");
+        }
+    }
+
+    function clearSavedData() {
+        if (!confirm("Clear all locally saved console data?")) return;
+        localStorage.removeItem(storageKey);
+        fields.forEach(id => document.getElementById(id).value = "");
+        document.querySelectorAll("[data-check]").forEach(box => box.checked = false);
+        preparePrint();
+        showToast("Saved data cleared.");
+    }
+
+    function resizeUI(delta) {
+        fs = Math.min(32, Math.max(14, fs + delta));
+        document.documentElement.style.setProperty("--base-fs", `${fs}px`);
+        saveAll(false);
+    }
+
+    function toggleDarkMode(save = true) {
+        document.body.classList.toggle("dark");
+        const dark = document.body.classList.contains("dark");
+        document.documentElement.style.setProperty("--bg", dark ? "#121212" : "#ffffff");
+        document.documentElement.style.setProperty("--surface", dark ? "#1f1f1f" : "#f8f9fa");
+        document.documentElement.style.setProperty("--text", dark ? "#f1f3f4" : "#202124");
+        document.documentElement.style.setProperty("--border", dark ? "#3c4043" : "#dadce0");
+        if (save) saveAll(false);
+    }
+
+    function launchLive() {
+        document.getElementById("performance-view").style.display = "block";
+        step = 0;
+        secondsElapsed = 0;
+        updateUI();
+        startTimer();
+    }
+
+    function closeLive() {
+        document.getElementById("performance-view").style.display = "none";
+        clearInterval(timer);
+    }
+
+    function moveSlide(delta) {
+        step = Math.min(ceremony.length - 1, Math.max(0, step + delta));
+        updateUI();
+    }
+
+    function jumpToPronouncement() {
+        step = ceremony.findIndex(item => item.t === "Pronouncement");
+        updateUI();
+    }
+
+    function updateUI() {
+        const data = ceremony[step];
+        document.getElementById("slide-title").textContent = data.t;
+        document.getElementById("slide-text").textContent = data.s;
+        document.getElementById("slide-count").textContent = `Slide ${step + 1} of ${ceremony.length}`;
+        document.getElementById("progress-bar").style.width = `${((step + 1) / ceremony.length) * 100}%`;
+
+        const legalBox = document.getElementById("legal-box");
+        document.getElementById("legal-txt").textContent = data.l;
+        legalBox.style.display = data.l ? "block" : "none";
+        document.getElementById("q-card").style.display = "none";
+        refreshLiveNotes();
+    }
+
+    function getEmergencyQuote() {
+        const quote = quotes[Math.floor(Math.random() * quotes.length)];
+        const card = document.getElementById("q-card");
+        card.textContent = quote;
+        card.style.display = "block";
+    }
+
+    function toggleLiveNotes() {
+        const notes = document.getElementById("live-notes");
+        notes.style.display = notes.style.display === "block" ? "none" : "block";
+        refreshLiveNotes();
+    }
+
+    function refreshLiveNotes() {
+        const notes = document.getElementById("morning-notes").value.trim();
+        document.getElementById("live-notes").textContent = notes || "No morning notes saved yet.";
+    }
+
+    function startTimer() {
+        clearInterval(timer);
+        document.getElementById("live-timer").textContent = "00:00";
+        timer = setInterval(() => {
+            secondsElapsed++;
+            const minutes = Math.floor(secondsElapsed / 60).toString().padStart(2, "0");
+            const seconds = (secondsElapsed % 60).toString().padStart(2, "0");
+            document.getElementById("live-timer").textContent = `${minutes}:${seconds}`;
+        }, 1000);
+    }
+
+    function renderCeremonyList() {
+        const list = document.getElementById("ceremony-list");
+        list.innerHTML = ceremony.map((item, index) => `
+            <article class="status-card" style="margin-bottom:10px;">
+                <strong>${index + 1}. ${item.t}</strong>
+                <p>${item.s}</p>
+                ${item.l ? `<p class="legal-callout"><strong>Must:</strong> ${item.l}</p>` : ""}
+            </article>
+        `).join("");
+    }
+
+    function preparePrint() {
+        document.getElementById("print-couple").textContent = document.getElementById("couple-names").value || "J.C. & Jacquelyn";
+        document.getElementById("print-location").textContent = document.getElementById("ceremony-location").value || "Paso Robles, CA";
+        document.getElementById("print-notes").textContent = document.getElementById("morning-notes").value || "No notes entered.";
+        document.getElementById("print-content").innerHTML = ceremony.map((item, index) => `
+            <h3>${index + 1}. ${item.t}</h3>
+            <p>${item.s}</p>
+            ${item.l ? `<p><strong>Mandatory:</strong> ${item.l}</p>` : ""}
+            <hr>
+        `).join("");
+    }
+
+    function showToast(message) {
+        const toast = document.getElementById("toast");
+        toast.textContent = message;
+        toast.classList.add("show");
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(() => toast.classList.remove("show"), 2200);
+    }
+</script>
+</body>
+</html>
