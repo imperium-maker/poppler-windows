@@ -2,6 +2,15 @@
 
 Download the latest Poppler prebuilt-binaries packaged with dependencies for Windows. Built with the help of conda-forge and [poppler-feedstock](https://github.com/conda-forge/poppler-feedstock). Includes the latest poppler-data.
 
+
+## Officiant Master Console App
+
+A standalone wedding officiant console is available in [`index.html`](./index.html). Upload `index.html` to any static web host and the app link will be the URL of that folder or domain. For example, if it is hosted from the root of a domain, open `https://your-domain.example/`.
+
+You can also open it directly on a computer by double-clicking `index.html`. The legacy [`officiant-master-console.html`](./officiant-master-console.html) file redirects to `index.html` so old links still work.
+
+No API key is required. The console does not call OpenAI or any paid external API; notes and checklist state are saved locally in the visitor's browser with `localStorage`. Do not put secret API keys in public HTML. If AI features are added later, store the key in a private backend or serverless environment variable and call that backend from the page.
+
 ## Download
 ![](https://github.com/oschwartz10612/poppler-windows/workflows/Package%20For%20Windows/badge.svg)
 
